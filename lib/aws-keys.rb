@@ -37,10 +37,17 @@ module AwsKeys
     return
   end
 
-  # Raises an exception if the keys can't be found
+  # Guaranteed to return a key, or exits the program
   def self.keys! (type)
     k = keys(type)
-    raise KeyNotFoundException.new("Could not find key of type: #{type}") unless k
+
+    unless k
+      STDERR.puts "Could not find key of type: #{type}"
+      STDERR.puts "Please make sure one of these files exists:"
+      PATHS.each { |p| STDERR.puts "* #{File.expand_path p}/#{type}.creds" }
+      exit 233
+    end
+
     k
   end
 end
