@@ -1,6 +1,16 @@
 module AwsKeys
   class KeyNotFoundException < Exception; end
 
+  class Key
+    attr_accessor :id, :secret
+
+    def initialize (id, secret)
+      @id = id
+      @secret = secret
+    end
+
+  end
+
   PATHS = [".ec2"]
   PATHS.push(File.expand_path("~/.ec2")) if ENV["HOME"]
   PATHS.push("/etc/ec2")
@@ -23,7 +33,7 @@ module AwsKeys
     data = File.read(path)
     # Explicitly match with regex, to make sure our data is right
     re = /AWSAccessKeyId=([A-Z0-9]+)\nAWSSecretKey=([^\n]+)\n?$/
-    return { :id => $1, :secret => $2 } if data =~ re
+    return Key.new($1, $2) if data =~ re
     return
   end
 
