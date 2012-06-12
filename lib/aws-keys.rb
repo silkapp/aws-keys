@@ -27,8 +27,8 @@ module AwsKeys
     find_key_path(type) || find_key_path("all")
   end
 
-  def self.keys (type)
-    path = key_path(type)
+  def self.keys (type, match_all = true)
+    path = match_all ? key_path(type) : find_key_path(type)
     return unless path
     data = File.read(path)
     # Explicitly match with regex, to make sure our data is right
