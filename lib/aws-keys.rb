@@ -2,11 +2,12 @@ module AwsKeys
   class KeyNotFoundException < Exception; end
 
   class Key
-    attr_accessor :id, :secret
+    attr_reader :id, :secret, :token
 
-    def initialize (id, secret)
+    def initialize (id, secret, token = nil)
       @id = id
       @secret = secret
+      @token = token
     end
 
   end
@@ -14,6 +15,27 @@ module AwsKeys
   PATHS = [".ec2"]
   PATHS.push(File.expand_path("~/.ec2")) if ENV["HOME"]
   PATHS.push("/etc/ec2")
+
+  def self.role_key (rolename = nil)
+    require 'open-uri'
+    require 'json'
+
+    return unless File.exist? "/etc/ec2_version"
+    unless rolename
+      rolename = open("http://169.254.169.254/2012-01-12/meta-data/iam/security-credentials").read
+      return unless (rolename && rolename.length > 0)
+    end
+
+    data = open("http://169.254.169.254/2012-01-12/meta-data/iam/security-credentials/#{rolename}").read rescue nil
+    return unless (data && data.length > 0)
+
+    d = JSON.parse(data)
+    return unless d
+
+    return Key.new(d["AccessKeyId"], d["SecretAccessKey"], d["Token"])
+  rescue
+    nil
+  end
 
   def self.find_key_path (type)
     PATHS.each do |path|
